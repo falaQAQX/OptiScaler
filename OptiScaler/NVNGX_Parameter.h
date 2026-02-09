@@ -483,6 +483,9 @@ inline static void InitNGXParameters(NVSDK_NGX_Parameter* InParams)
     InParams->Set(NVSDK_NGX_Parameter_DLSS_Enable_Output_Subrects, 1);
     InParams->Set(NVSDK_NGX_Parameter_RTXValue, 0);
 
+    InParams->Set(NVSDK_NGX_Parameter_DeepResolve_Available, 0);
+    InParams->Set(NVSDK_NGX_EParameter_DeepDVC_Available, 0);
+
     if (!State::Instance().isRunningOnNvidia)
     {
         InParams->Set("SuperSamplingDenoising.NeedsUpdatedDriver", 0);
@@ -509,21 +512,21 @@ inline static void InitNGXParameters(NVSDK_NGX_Parameter* InParams)
         InParams->Set("FrameGeneration.Available", 1);
         InParams->Set("FrameGeneration.NeedsUpdatedDriver", 0);
         InParams->Set("FrameGeneration.FeatureInitResult", 1);
-        InParams->Set("FrameGeneration.MinDriverVersionMajor", 0);
         InParams->Set("FrameInterpolation.Available", 1);
         InParams->Set(NVSDK_NGX_Parameter_FrameInterpolation_NeedsUpdatedDriver, 0);
         InParams->Set(NVSDK_NGX_Parameter_FrameInterpolation_FeatureInitResult, 1);
-
         InParams->Set("DLSSG.MultiFrameCountMax", 1);
 
         if (State::Instance().NVNGX_Engine == NVSDK_NGX_ENGINE_TYPE_UNREAL ||
             State::Instance().gameQuirks & GameQuirk::ForceUnrealEngine)
         {
             InParams->Set(NVSDK_NGX_Parameter_FrameInterpolation_MinDriverVersionMajor, 10);
+            InParams->Set("FrameGeneration.MinDriverVersionMajor", 10);
         }
         else
         {
             InParams->Set(NVSDK_NGX_Parameter_FrameInterpolation_MinDriverVersionMajor, 0);
+            InParams->Set("FrameGeneration.MinDriverVersionMajor", 0);
         }
     }
 
