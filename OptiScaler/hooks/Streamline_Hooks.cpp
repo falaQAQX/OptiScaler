@@ -673,10 +673,10 @@ sl::Result StreamlineHooks::hkslDLSSGGetState(const sl::ViewportHandle& viewport
     }
     else
     {
-            state.numFramesActuallyPresented = 1;
+        state.numFramesActuallyPresented = 1;
     }
 
-        state.numFramesToGenerateMax = 1;
+    state.numFramesToGenerateMax = 1;
 
     LOG_DEBUG("Status: {}, numFramesActuallyPresented: {}", magic_enum::enum_name(state.status),
               state.numFramesActuallyPresented);
