@@ -55,9 +55,14 @@ class KernelHooks
     static HMODULE hk_KB_LoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
     static BOOL hk_K32_FreeLibrary(HMODULE lpLibrary);
 
+    static inline std::mutex hookMutex32;
+    static inline std::mutex hookMutexBase;
+
   public:
     static void Hook()
     {
+        std::lock_guard<std::mutex> lock(hookMutex32);
+
         if (o_K32_FreeLibrary != nullptr)
             return;
 
@@ -81,6 +86,8 @@ class KernelHooks
 
     static void HookBase()
     {
+        std::lock_guard<std::mutex> lock(hookMutexBase);
+
         if (o_KB_GetProcAddress != nullptr)
             return;
 

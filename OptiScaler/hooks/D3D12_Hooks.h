@@ -4,6 +4,10 @@
 
 class D3D12Hooks
 {
+  private:
+    inline static std::mutex hookMutex;
+    inline static std::mutex agilityMutex;
+
   public:
     static void Hook();
     static void HookAgility(HMODULE module);

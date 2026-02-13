@@ -14,6 +14,8 @@
 class NtdllHooks
 {
   private:
+    inline static std::mutex hookMutex;
+
     inline static NtdllProxy::PFN_NtLoadDll o_NtLoadDll = nullptr;
     inline static NtdllProxy::PFN_LdrLoadDll o_LdrLoadDll = nullptr;
     inline static NtdllProxy::PFN_LdrUnloadDll o_LdrUnloadDll = nullptr;
@@ -159,6 +161,8 @@ class NtdllHooks
   public:
     static void Hook()
     {
+        std::lock_guard lock(hookMutex);
+
         LOG_FUNC();
 
         if (!Config::Instance()->UseNtdllHooks.value_or_default())

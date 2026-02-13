@@ -300,6 +300,8 @@ inline static HRESULT hkCreateDXGIFactory2(UINT Flags, REFIID riid, IDXGIFactory
 
 void DxgiHooks::Hook()
 {
+    std::lock_guard<std::mutex> lock(hookMutex);
+
     // If not spoofing and
     // using no frame generation (or Nukem's) and
     // not using DXGI spoofing we don't need DXGI hooks

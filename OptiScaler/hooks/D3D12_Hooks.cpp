@@ -963,6 +963,8 @@ static void UnhookDevice()
 
 void D3D12Hooks::Hook()
 {
+    std::lock_guard<std::mutex> lock(hookMutex);
+
     if (o_D3D12CreateDevice != nullptr)
         return;
 
@@ -976,6 +978,8 @@ void D3D12Hooks::Hook()
 
 void D3D12Hooks::HookAgility(HMODULE module)
 {
+    std::lock_guard<std::mutex> lock(agilityMutex);
+
     if (module == nullptr || o_D3D12GetInterface != nullptr)
         return;
 
