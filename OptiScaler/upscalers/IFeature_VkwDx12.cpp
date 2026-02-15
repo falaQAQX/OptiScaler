@@ -77,6 +77,21 @@ static bool IsDepthFormat(VkFormat format)
     }
 }
 
+static bool HasStencil(VkFormat format)
+{
+    switch (format)
+    {
+    case VK_FORMAT_X8_D24_UNORM_PACK32:
+    case VK_FORMAT_D16_UNORM_S8_UINT:
+    case VK_FORMAT_D24_UNORM_S8_UINT:
+    case VK_FORMAT_D32_SFLOAT_S8_UINT:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 // Helper function to convert Vulkan formats to DXGI formats
 static DXGI_FORMAT VkFormatToDxgiFormat(VkFormat vkFormat)
 {
@@ -543,11 +558,15 @@ bool IFeature_VkwDx12::CreateSharedTexture(const VkImageCreateInfo& ImageInfo, V
 
     VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
+    uint32_t allowedBits = memoryRequirements.memoryTypeBits & memoryWin32HandleProperties.memoryTypeBits;
+
+    uint32_t typeIndex = FindVulkanMemoryTypeIndex(allowedBits, memoryFlags);
+
     const VkMemoryAllocateInfo memoryAllocInfo = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
         .pNext = &importMemoryWin32HandleInfo,
         .allocationSize = memoryRequirements.size,
-        .memoryTypeIndex = FindVulkanMemoryTypeIndex(memoryWin32HandleProperties.memoryTypeBits, memoryFlags),
+        .memoryTypeIndex = typeIndex,
     };
 
     if (memoryAllocInfo.memoryTypeIndex == 0xFFFFFFFF)
@@ -655,8 +674,10 @@ bool IFeature_VkwDx12::CopyTextureFromVkToDx12(VkCommandBuffer InCmdBuffer, NVSD
         imageCreateInfo.arrayLayers = 1;
         imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+
         imageCreateInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
                                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
         imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -718,11 +739,19 @@ bool IFeature_VkwDx12::CopyTextureFromVkToDx12(VkCommandBuffer InCmdBuffer, NVSD
 
             imageBarriers[1].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
             imageBarriers[1].oldLayout = OutResource->VkSourceImageLayout;
-            imageBarriers[1].newLayout = VK_IMAGE_LAYOUT_GENERAL;
+            imageBarriers[1].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageBarriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             imageBarriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             imageBarriers[1].image = InParam->Resource.ImageViewInfo.Image;
-            imageBarriers[1].subresourceRange = InParam->Resource.ImageViewInfo.SubresourceRange;
+            imageBarriers[1].subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+            if (HasStencil(InParam->Resource.ImageViewInfo.Format))
+                imageBarriers[1].subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+            imageBarriers[1].subresourceRange.baseMipLevel = 0;
+            imageBarriers[1].subresourceRange.levelCount = 1;
+            imageBarriers[1].subresourceRange.baseArrayLayer = 0;
+            imageBarriers[1].subresourceRange.layerCount = 1;
             imageBarriers[1].srcAccessMask = OutResource->VkSourceImageAccess;
             imageBarriers[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
