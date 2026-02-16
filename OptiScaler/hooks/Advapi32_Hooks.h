@@ -154,7 +154,7 @@ static LONG hkRegQueryValueExW(HKEY hKey, LPCWSTR lpValueName, LPDWORD lpReserve
     {
         if (valueName == L"DriverVersion")
         {
-            const std::wstring spoofedValue = L"32.0.15.7302";
+            const std::wstring spoofedValue = Config::Instance()->SpoofedDriver.value_or_default();
 
             size_t spoofedValueSize =
                 (spoofedValue.size() + 1) * sizeof(wchar_t); // Size in bytes including null terminator
@@ -292,7 +292,7 @@ LONG WINAPI hkRegQueryValueExA(HKEY hKey, LPCSTR lpValueName, LPDWORD lpReserved
     {
         if (valueName == "DriverVersion")
         {
-            const std::string spoofedValue = "32.0.15.7302";
+            const std::string spoofedValue = wstring_to_string(Config::Instance()->SpoofedDriver.value_or_default());
             size_t spoofedValueSize =
                 (spoofedValue.size() + 1) * sizeof(wchar_t); // Size in bytes including null terminator
 
